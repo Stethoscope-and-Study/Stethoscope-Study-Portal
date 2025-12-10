@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stethoscope & Study Portal</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <style>
+        /* Design (CSS) */
+        :root { --primary: #0056b3; --success: #28a745; --danger: #dc3545; --bg: #f4f6f8; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        
+        .container { background: white; width: 95%; max-width: 600px; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; }
+        
+        h2, h3 { color: var(--primary); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: 0.3s; }
+        .btn:hover { background: #004494; }
+        .btn-disabled { background: #ccc; cursor: not-allowed; }
+        
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 10px; width: 100%; padding: 10px; border-radius: 6px; cursor: pointer; }
+        .btn-outline:hover { background: #e3f2fd; }
+
+        .hide { display: none; }
+        .error { color: var(--danger); font-size: 0.9rem; margin-top: 5px; }
+        
+        /* Quiz Options */
+        .option-btn { width: 100%; padding: 12px; margin-top: 8px; background: white; border: 2px solid #ddd; border-radius: 6px; text-align: left; cursor: pointer; font-size: 1rem; }
+        .option-btn:hover { border-color: var(--primary); background: #f0f8ff; }
+        .option-btn.correct { background: var(--success); color: white; border-color: var(--success); }
+        .option-btn.wrong { background: var(--danger); color: white; border-color: var(--danger); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #ddd; }
+        th { background: var(--primary); color: white; }
+        
+        .msg-box { padding: 10px; border-radius: 5px; font-weight: bold; margin-top: 10px; }
+        .fail { color: #dc3545; background: #ffe6e6; border: 1px solid #dc3545; }
+        .success { color: #28a745; background: #e6ffec; border: 1px solid #28a745; }
+
+        .completed-badge { display: inline-block; background: var(--success); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.9rem; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="auth-section">
+            <h2 id="auth-title">Login</h2>
+            
+            <div id="login-form">
+                <input type="email" id="login-email" placeholder="Email Address" required>
+                <input type="password" id="login-pass" placeholder="Password" required>
+                <button class="btn" onclick="handleLogin()">Login</button>
+                <p style="text-align:center; margin-top:15px; font-size:0.9rem;">
+                    Don't have an account? <a href="#" onclick="toggleAuth(true)" style="color:var(--primary);">Register here</a>
+                </p>
+            </div>
+
+            <div id="register-form" class="hide">
+                <input type="text" id="reg-name" placeholder="Full Name" required>
+                <input type="email" id="reg-email" placeholder="Email Address" required>
+                <input type="password" id="reg-pass" placeholder="Create Password" required>
+                <button class="btn" id="reg-btn" onclick="initiateRegister()">Send OTP & Register</button>
+                <p style="text-align:center; margin-top:15px; font-size:0.9rem;">
+                    Already have an account? <a href="#" onclick="toggleAuth(false)" style="color:var(--primary);">Login here</a>
+                </p>
+            </div>
+
+            <div id="otp-form" class="hide">
+                <p>We have sent a code to your email address.</p>
+                <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" required>
+                <button class="btn" onclick="verifyOTP()">Verify OTP</button>
+                <button class="btn-outline" onclick="location.reload()">Cancel</button>
+            </div>
+
+            <div id="auth-msg" class="error"></div>
+        </div>
+
+        <div id="dashboard-section" class="hide">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">Hi, <span id="user-name-display">User</span>!</h3>
+                <button onclick="logout()" style="padding:5px 10px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer;">Logout</button>
+            </div>
+            <hr>
+            
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                <h3 style="margin:0 0 10px 0; color:#333;">Medical Quiz (Set 1)</h3>
+                <p>Total Questions: 10</p>
+                <div id="quiz-action-area">
+                    <button class="btn" onclick="startQuiz()">Start Quiz</button>
+                </div>
+            </div>
+
+            <button class="btn-outline" onclick="showLeaderboardOnly()">🏆 View Global Leaderboard</button>
+        </div>
+
+        <div id="quiz-area" class="hide">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span style="font-weight:bold; color:var(--primary);">Set 1</span>
+                <span>Score: <span id="current-score">0</span></span>
+            </div>
+            <hr>
+            <h3 id="q-text" style="font-size:1.1rem; min-height:60px;">Question loading...</h3>
+            <div id="options-container"></div>
+            <p style="text-align:right; font-size:0.9rem; color:#666;">Q: <span id="q-idx">1</span> / 10</p>
+        </div>
+
+        <div id="result-area" class="hide">
+            <h2>Quiz Completed!</h2>
+            <p style="text-align:center; font-size:1.2rem;">Your Score: <b id="final-score">0</b> / 10</p>
+            <div id="status-msg" class="hide"></div>
+            <div id="leaderboard-container">
+                <h3 style="text-align: center;">🌍 Top 10 Leaderboard</h3>
+                <table>
+                    <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
+                    <tbody id="leaderboard-body"><tr><td colspan="3">Loading...</td></tr></tbody>
+                </table>
+            </div>
+            <button class="btn" onclick="backToDashboard()">Back to Dashboard</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, orderBy, limit, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // 1. Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxBFlj_kjHb-YeNKwvhhVuQixVOiKNHHw",
+            authDomain: "stethoscope-and-study.firebaseapp.com",
+            projectId: "stethoscope-and-study",
+            storageBucket: "stethoscope-and-study.firebasestorage.app",
+            messagingSenderId: "246761756870",
+            appId: "1:246761756870:web:74fd6200bcc5d1c76b9fc7",
+            measurementId: "G-V9JWTSYHLN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- 2. EmailJS Setup ---
+        (function(){
+            emailjs.init("Ipl1hlV3EArGuB4ZR"); // Your Public Key
+        })();
+
+        const SERVICE_ID = "service_1ci2aoi"; 
+        const TEMPLATE_ID = "template_cqt36oa";
+
+        // Variables
+        let currentUser = null;
+        let generatedOTP = null;
+        let tempUserData = null;
+        let qIndex = 0;
+        let score = 0;
+
+        // Translated Questions
+        const questions = [
+            { q: "How many pairs of chromosomes are present in the human body?", options: ["22 pairs", "23 pairs", "24 pairs", "20 pairs"], a: 1 },
+            { q: "What is the average lifespan of RBC?", options: ["80 days", "100 days", "120 days", "150 days"], a: 2 },
+            { q: "What is the name of the membrane covering the heart?", options: ["Pleura", "Pericardium", "Meninges", "Peritoneum"], a: 1 },
+            { q: "From where is Insulin secreted?", options: ["Liver", "Pancreas", "Stomach", "Kidney"], a: 1 },
+            { q: "Which of the following is the Universal Donor group?", options: ["A Positive", "B Positive", "AB Positive", "O Negative"], a: 3 },
+            { q: "What is the full form of DNA?", options: ["Deoxyribonucleic Acid", "Dyribonucleic Acid", "Deoxynucleic Acid", "None"], a: 0 },
+            { q: "What is the weight of the human brain?", options: ["1.36 kg", "2.5 kg", "800 grams", "3 kg"], a: 0 },
+            { q: "Which disease is caused by Vitamin C deficiency?", options: ["Night Blindness", "Rickets", "Scurvy", "Beriberi"], a: 2 },
+            { q: "Who discovered Blood Groups?", options: ["Darwin", "Karl Landsteiner", "Mendel", "Louis Pasteur"], a: 1 },
+            { q: "Which is the largest bone in the human body?", options: ["Femur", "Stapes", "Tibia", "Humerus"], a: 0 }
+        ];
+
+        // Helper Functions
+        function hashPassword(password) { return CryptoJS.SHA256(password).toString(); }
+        function generateOTP() { return Math.floor(100000 + Math.random() * 900000).toString(); }
+
+        // --- 3. Authentication & OTP Logic ---
+        window.onload = async () => {
+            const savedEmail = localStorage.getItem("userEmail");
+            if (savedEmail) await fetchUserData(savedEmail);
+        };
+
+        window.toggleAuth = (isRegister) => {
+            document.getElementById('auth-title').innerText = isRegister ? "Register" : "Login";
+            document.getElementById('login-form').classList.toggle('hide', isRegister);
+            document.getElementById('register-form').classList.toggle('hide', !isRegister);
+            document.getElementById('otp-form').classList.add('hide');
+            document.getElementById('auth-msg').innerText = "";
+        };
+
+        // Send OTP
+        window.initiateRegister = async () => {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const pass = document.getElementById('reg-pass').value;
+            const msg = document.getElementById('auth-msg');
+
+            if(!name || !email || !pass) return msg.innerText = "Please fill in all details!";
+            msg.innerText = "Verifying...";
+            
+            try {
+                const userRef = doc(db, "users", email);
+                const snap = await getDoc(userRef);
+                if(snap.exists()) {
+                    msg.innerText = "Email already in use. Please login.";
+                    return;
+                }
+
+                generatedOTP = generateOTP();
+                tempUserData = { name, email, pass };
+                
+                const expiryTime = new Date(new Date().getTime() + 15 * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                document.getElementById('reg-btn').innerText = "Sending OTP...";
+                document.getElementById('reg-btn').classList.add('btn-disabled');
+
+                // Email Parameters
+                const templateParams = {
+                    name: name,
+                    otp: generatedOTP,
+                    time: expiryTime,
+                    to_email: email
+                };
+
+                // Send Email
+                await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+                
+                msg.innerText = "";
+                document.getElementById('register-form').classList.add('hide');
+                document.getElementById('otp-form').classList.remove('hide');
+                alert(`OTP Sent to ${email}`);
+
+            } catch (e) {
+                console.error(e);
+                msg.innerText = "Issue sending OTP. Please check email or internet.";
+                document.getElementById('reg-btn').innerText = "Send OTP & Register";
+                document.getElementById('reg-btn').classList.remove('btn-disabled');
+            }
+        };
+
+        // Verify OTP
+        window.verifyOTP = async () => {
+            const userOtp = document.getElementById('otp-input').value;
+            const msg = document.getElementById('auth-msg');
+
+            if (userOtp === generatedOTP) {
+                msg.innerText = "OTP Verified! Creating Account...";
+                try {
+                    const encryptedPass = hashPassword(tempUserData.pass);
+                    const newUser = { 
+                        name: tempUserData.name, 
+                        email: tempUserData.email, 
+                        password: encryptedPass, 
+                        completedSets: [] 
+                    };
+                    await setDoc(doc(db, "users", tempUserData.email), newUser);
+                    alert("Account Created Successfully!");
+                    loginSuccess(newUser);
+                } catch (e) { console.error(e); msg.innerText = "Database Error"; }
+            } else {
+                msg.innerText = "Invalid OTP! Please try again.";
+            }
+        };
+
+        // Login
+        window.handleLogin = async () => {
+            const email = document.getElementById('login-email').value.toLowerCase();
+            const pass = document.getElementById('login-pass').value;
+            try {
+                const snap = await getDoc(doc(db, "users", email));
+                if(snap.exists() && snap.data().password === hashPassword(pass)) {
+                    loginSuccess(snap.data());
+                } else {
+                    alert("Invalid Email or Password!");
+                }
+            } catch (e) { console.error(e); alert("Login Error"); }
+        };
+
+        function loginSuccess(userData) {
+            currentUser = userData;
+            localStorage.setItem("userEmail", userData.email);
+            document.getElementById('user-name-display').innerText = userData.name;
+            document.getElementById('auth-section').classList.add('hide');
+            document.getElementById('dashboard-section').classList.remove('hide');
+            updateDashboardUI();
+        }
+
+        function updateDashboardUI() {
+            const actionArea = document.getElementById('quiz-action-area');
+            if (currentUser.completedSets && currentUser.completedSets.includes('set1')) {
+                actionArea.innerHTML = `<span class="completed-badge">Completed ✅</span>`;
+            } else {
+                actionArea.innerHTML = `<button class="btn" onclick="startQuiz()">Start Quiz</button>`;
+            }
+        }
+
+        async function fetchUserData(email) {
+            const snap = await getDoc(doc(db, "users", email));
+            if(snap.exists()) loginSuccess(snap.data());
+        }
+
+        window.logout = () => { localStorage.removeItem("userEmail"); location.reload(); };
+
+        // --- 4. Quiz and Results ---
+        window.startQuiz = () => {
+            qIndex = 0; score = 0;
+            document.getElementById('dashboard-section').classList.add('hide');
+            document.getElementById('result-area').classList.add('hide');
+            document.getElementById('quiz-area').classList.remove('hide');
+            loadQuestion();
+        };
+
+        function loadQuestion() {
+            const q = questions[qIndex];
+            document.getElementById('q-text').innerText = q.q;
+            document.getElementById('q-idx').innerText = qIndex + 1;
+            document.getElementById('current-score').innerText = score;
+            const box = document.getElementById('options-container');
+            box.innerHTML = "";
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(idx, btn);
+                box.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIdx, btn) {
+            const correctIdx = questions[qIndex].a;
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+            if(selectedIdx === correctIdx) { btn.classList.add('correct'); score++; } 
+            else { btn.classList.add('wrong'); buttons[correctIdx].classList.add('correct'); }
+            setTimeout(() => { qIndex++; if(qIndex < questions.length) loadQuestion(); else finishQuiz(); }, 1000);
+        }
+
+        async function finishQuiz() {
+            document.getElementById('quiz-area').classList.add('hide');
+            document.getElementById('result-area').classList.remove('hide');
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('leaderboard-container').classList.remove('hide');
+
+            const msgBox = document.getElementById('status-msg');
+            msgBox.classList.remove('hide');
+            msgBox.innerText = "Processing...";
+            msgBox.className = "msg-box";
+
+            try {
+                if (!currentUser.completedSets) currentUser.completedSets = [];
+                if (!currentUser.completedSets.includes('set1')) {
+                    currentUser.completedSets.push('set1');
+                    await updateDoc(doc(db, "users", currentUser.email), { completedSets: currentUser.completedSets });
+                }
+            } catch (e) { console.error(e); }
+
+            if(score < 5) {
+                msgBox.innerText = "Score is less than 5."; msgBox.className = "msg-box fail"; loadLeaderboard(); return;
+            }
+
+            try {
+                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(10));
+                const snapshot = await getDocs(q);
+                const leaders = snapshot.docs;
+                let shouldSave = (leaders.length < 10);
+                let docToDelete = null;
+
+                if (!shouldSave) {
+                    const lastPerson = leaders[leaders.length - 1];
+                    if (score > lastPerson.data().score) { shouldSave = true; docToDelete = lastPerson.id; }
+                }
+
+                if (shouldSave) {
+                    await addDoc(collection(db, "leaderboard"), { name: currentUser.name, score, email: currentUser.email, time: new Date() });
+                    if (docToDelete) await deleteDoc(doc(db, "leaderboard", docToDelete));
+                    msgBox.innerText = "You made it to the Top 10!"; msgBox.className = "msg-box success";
+                } else {
+                    msgBox.innerText = "Did not make it to the Top 10."; msgBox.className = "msg-box fail";
+                }
+            } catch (e) { console.error(e); }
+            loadLeaderboard();
+        }
+
+        window.showLeaderboardOnly = () => {
+            document.getElementById('dashboard-section').classList.add('hide');
+            document.getElementById('result-area').classList.remove('hide');
+            document.getElementById('final-score').innerText = "-"; 
+            document.getElementById('status-msg').classList.add('hide');
+            loadLeaderboard();
+        };
+
+        window.backToDashboard = () => {
+            document.getElementById('result-area').classList.add('hide');
+            document.getElementById('dashboard-section').classList.remove('hide');
+            updateDashboardUI();
+        };
+
+        async function loadLeaderboard() {
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+            try {
+                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(10));
+                const snap = await getDocs(q);
+                tbody.innerHTML = "";
+                let rank = 1;
+                snap.forEach((doc) => {
+                    const data = doc.data();
+                    tbody.innerHTML += `<tr><td>${rank++}</td><td>${data.name}</td><td>${data.score}</td></tr>`;
+                });
+                if(snap.empty) tbody.innerHTML = "<tr><td colspan='3'>No records found!</td></tr>";
+            } catch(e) {}
+        }
+    </script> 
+</body>
+</html>
