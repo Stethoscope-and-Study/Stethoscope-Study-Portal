@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Question Portal UI</title>
+
+    <link rel="icon" href="stethoscope-and-study-logo1.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --success: #48bb78;
+            --danger: #f56565;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --primary-color: #0d6efd; 
+            --nav-height: 76px;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #f0f2f5;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: var(--nav-height);
+            color: var(--text-dark);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+            z-index: -1;
+            opacity: 0.9;
+        }
+
+        /* --- Navbar Styles --- */
+        .navbar {
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .nav-link { position: relative; color: #555 !important; font-weight: 500; transition: color 0.3s ease; }
+        .nav-link:hover, .nav-link.active { color: var(--primary-color) !important; }
+        
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            width: 100%;
+        }
+
+        /* --- Footer Styles --- */
+        .footer-custom {
+            background-color: #1e293b; color: #94a3b8;
+            padding-top: 3rem; margin-top: auto;
+            border-top: 4px solid var(--primary-color);
+        }
+        .footer-title { color: #fff; font-weight: 600; margin-bottom: 1.2rem; position: relative; display: inline-block; }
+        .footer-title::after { content: ''; position: absolute; left: 0; bottom: -5px; width: 40px; height: 2px; background-color: var(--primary-color); }
+        .footer-link { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 0.5rem; transition: all 0.2s; }
+        .footer-link:hover { color: #fff; padding-left: 5px; }
+        .social-btn { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.05); display: inline-flex; align-items: center; justify-content: center; color: #fff; margin-right: 8px; transition: all 0.3s; text-decoration: none; }
+        .social-btn:hover { background: var(--primary-color); transform: translateY(-3px); color: #fff; }
+        .copyright-bar { background-color: #0f172a; padding: 1.5rem 0; margin-top: 3rem; }
+
+        /* --- Layout & Transitions --- */
+        .section { 
+            display: none; 
+            animation: fadeScaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .section.active { display: block; }
+        
+        @keyframes fadeScaleUp { 
+            from { opacity: 0; transform: scale(0.98) translateY(20px); } 
+            to { opacity: 1; transform: scale(1) translateY(0); } 
+        }
+
+        /* --- Headers --- */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.5);
+            backdrop-filter: blur(10px);
+        }
+        .section-title {
+            margin: 0;
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title i { color: #4299e1; }
+
+        /* --- Year Cards --- */
+        .year-card-decorated {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 24px;
+            padding: 2.5rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .year-card-decorated:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-hover);
+        }
+        .year-card-decorated::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: linear-gradient(90deg, var(--primary-color), #60a5fa);
+        }
+        .year-card-decorated::after {
+            content: '\f133';
+            font-family: "Font Awesome 6 Free"; 
+            font-weight: 900;
+            position: absolute;
+            bottom: -15px;
+            right: -15px;
+            font-size: 8rem;
+            color: var(--primary-color);
+            opacity: 0.03;
+            transform: rotate(-10deg);
+            transition: all 0.3s ease;
+        }
+        .year-card-decorated:hover::after { transform: rotate(0deg) scale(1.1); opacity: 0.07; }
+        .year-title { font-size: 2.5rem; font-weight: 800; color: #111827; margin-bottom: 0.75rem; position: relative; z-index: 1; letter-spacing: -1px; }
+        .year-badge { display: inline-flex; align-items: center; padding: 0.4rem 1.2rem; border-radius: 50px; font-size: 0.9rem; font-weight: 700; position: relative; z-index: 1; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .badge-active { background: #eff6ff; color: var(--primary-color); border: 1px solid #bfdbfe; }
+        .badge-inactive { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+        
+        .timer-badge { font-variant-numeric: tabular-nums; font-size: 0.85rem; font-weight: 700; margin-top: 15px; padding: 6px 14px; border-radius: 12px; display: inline-block; position: relative; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .timer-active { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+        .timer-future { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+        /* --- Month Cards Grid --- */
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+        .month-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.8);
+            cursor: pointer;
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+        .month-card:hover { border-color: var(--primary-color); transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+        .month-card.active-month { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid transparent; }
+        .month-card.active-month:hover { border-color: var(--primary-color); }
+        .month-card.locked { background: #f9fafb; cursor: not-allowed; opacity: 0.7; }
+        .month-icon { width: 60px; height: 60px; border-radius: 50%; background: white; color: var(--primary-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.4rem; transition: transform 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f3f4f6; }
+        .month-card:hover .month-icon { transform: scale(1.1) rotate(10deg); background: var(--primary-color); color: white; }
+        .month-card.locked .month-icon { background: #e5e7eb; color: #9ca3af; box-shadow: none; }
+        .month-name { font-weight: 700; color: #374151; font-size: 1.25rem; margin-bottom: 0.25rem; }
+        .month-status { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .month-expiry-timer { font-size: 0.75rem; color: #ef4444; font-weight: 700; margin-top: 8px; font-variant-numeric: tabular-nums; background: #fef2f2; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+
+        /* --- Quiz Sets Grid (New) --- */
+        .set-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .set-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; transition: 0.3s; }
+        
+        .status-upcoming { border-left-color: #ffc107; }
+        .status-upcoming::before { background: #ffc107; }
+        
+        .status-live { border-left-color: #0d6efd; }
+        .status-live::before { background: #0d6efd; }
+        
+        .status-expired { border-left-color: #6c757d; }
+        .status-expired::before { background: #6c757d; }
+        
+        .status-completed { border-left-color: #198754; }
+        .status-completed::before { background: #198754; }
+
+        .set-card:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-md);
+        }
+        .set-info h5 { margin: 0; font-weight: 600; color: #2d3748; }
+        .set-meta { font-size: 0.85rem; color: #718096; margin-top: 5px; }
+        .set-action { 
+            background: #eff6ff; color: var(--primary-color); 
+            width: 40px; height: 40px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+        }
+        .set-card:hover .set-action { background: var(--primary-color); color: white; }
+        .set-done .set-action { background: #f0fff4; color: var(--success); }
+
+        .loader {
+            display: flex; justify-content: center; padding: 2rem;
+            color: var(--primary-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <span class="fw-bold" style="color: #333;">Stethoscope & <span class="text-primary">Study</span></span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="Quiz_Dashboard.html">Quiz Portal</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="leaderboard.html">Leaderboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://www.youtube.com" target="_blank">Tutorials</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle btn btn-light rounded-pill px-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="border: 1px solid #eee;">
+                            <i class="fas fa-user-circle fa-lg me-1"></i> <span id="nav-user-name">Account</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" id="profile-menu-items">
+                            <li><a class="dropdown-item" href="index.html">Login</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div id="year-menu-section" class="section active">
+            <div class="section-header">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="index.html" class="btn btn-light border rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; text-decoration: none;">
+                        <i class="fas fa-arrow-left text-secondary"></i>
+                    </a>
+                    <h3 class="section-title mb-0">Select Academic Year</h3>
+                </div>
+                <i class="fas fa-graduation-cap text-muted fa-2x opacity-25"></i>
+            </div>
+            
+            <div id="years-container" class="row justify-content-center g-4">
+                <div class="loader">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="month-menu-section" class="section">
+            <div class="section-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" onclick="goBackToYears()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h3 class="section-title mb-0" id="selected-year-title">2025 Quizzes</h3>
+                </div>
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill px-3">12 Months</span>
+            </div>
+            
+            <div id="months-container" class="month-grid">
+                </div>
+        </div>
+
+        <div id="sets-menu-section" class="section">
+            <div class="section-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" onclick="goBackToMonths()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h3 class="section-title mb-0" id="selected-month-title">December Sets</h3>
+                        <small class="text-muted" id="selected-year-subtitle">Academic Year 2025</small>
+                    </div>
+                </div>
+                <i class="fas fa-layer-group text-muted fa-2x opacity-25"></i>
+            </div>
+            
+            <div id="sets-container" class="d-flex flex-column gap-3">
+                </div>
+        </div>
+    </main>
+
+    <footer class="footer-custom">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <h5 class="text-white mb-3">Stethoscope & Study</h5>
+                    <p class="small mb-4">Empowering medical students worldwide with accessible quizzes, performance tracking, and a competitive learning environment.</p>
+                    <div>
+                        <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="footer-title">Quick Links</h6>
+                    <a href="index.html" class="footer-link">Home</a>
+                    <a href="Quiz_Dashboard.html" class="footer-link">Questions</a>
+                    <a href="leaderboard.html" class="footer-link">Leaderboard</a>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="footer-title">Contact</h6>
+                    <p class="small"><i class="fas fa-envelope me-2 text-primary"></i> stethoscope.study99@gmail.com</p>
+                    <a href="Quiz_Dashboard.html" class="btn btn-outline-light btn-sm rounded-pill px-3 mt-2">Start Learning</a>
+                </div>
+            </div>
+        </div>
+        <div class="copyright-bar text-center small">
+            &copy; 2025 Stethoscope & Study. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        
+        // ----------------------------------------------------
+        // IMPORTANT: Import Config from env.js to hide keys
+        // ----------------------------------------------------
+        import CONFIG from './env.js';
+
+        // 1. Firebase Config (Using CONFIG.FIREBASE)
+        const app = initializeApp(CONFIG.FIREBASE);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let selectedYear = null;
+        let selectedMonth = null;
+        
+        // Month mapping
+        const allMonths = [
+            "January", "February", "March", "April", "May", "June", 
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        // 2. Initialize Page
+        window.onload = async () => {
+            // Check Auth from LocalStorage
+            const savedEmail = localStorage.getItem("userEmail");
+            if (savedEmail) {
+                await fetchUserData(savedEmail);
+                loadAcademicYears(); // Only load data if logged in (or load anyway based on your preference)
+            } else {
+                updateProfileMenu();
+                // Redirect if strict auth required
+                // window.location.href = "index.html";
+                // For now, loading years even for guests
+                loadAcademicYears();
+            }
+        };
+
+        // 3. Fetch User Logic
+        async function fetchUserData(email) {
+            try {
+                const snap = await getDoc(doc(db, "users", email));
+                if(snap.exists()) {
+                    currentUser = snap.data();
+                    updateProfileMenu();
+                }
+            } catch (e) {
+                console.error("Error fetching user:", e);
+            }
+        }
+
+        // 4. Update Navbar UI
+        function updateProfileMenu() {
+            const menu = document.getElementById('profile-menu-items');
+            const userNameDisplay = document.getElementById('nav-user-name');
+
+            if (currentUser) {
+                // Logged In
+                userNameDisplay.innerText = currentUser.name.split(' ')[0]; 
+                menu.innerHTML = `
+                    <li><h6 class="dropdown-header">Signed in as ${currentUser.name}</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="leaderboard.html">Leaderboard</a></li>
+                    <li><a class="dropdown-item text-danger" href="#" id="logout-btn">Logout</a></li>
+                `;
+                document.getElementById('logout-btn').addEventListener('click', logout);
+            } else {
+                // Logged Out
+                userNameDisplay.innerText = "Guest";
+                menu.innerHTML = `
+                    <li><a class="dropdown-item" href="index.html">Login to Access</a></li>
+                `;
+            }
+        }
+
+        window.logout = () => {
+            currentUser = null;
+            localStorage.removeItem("userEmail");
+            window.location.href = "index.html";
+        };
+
+        // ================== DBMS INTEGRATION LOGIC ==================
+
+        // A. Load Academic Years from Firestore
+        async function loadAcademicYears() {
+            const container = document.getElementById('years-container');
+            container.innerHTML = '<div class="loader"><div class="spinner-border" role="status"></div></div>';
+
+            try {
+                // Fetch years from 'academic_years' collection
+                const q = query(collection(db, "academic_years"), orderBy("year", "asc"));
+                const querySnapshot = await getDocs(q);
+
+                container.innerHTML = ""; // Clear loader
+
+                if (querySnapshot.empty) {
+                    // Fallback if DB is empty
+                    container.innerHTML = "<p class='text-center text-muted'>No academic sessions found.</p>";
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Assuming doc.id is the year string like "2025"
+                    const year = doc.id; 
+                    const status = data.status || "Upcoming";
+                    const isLocked = status !== "Active";
+                    
+                    const cardHtml = `
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="year-card-decorated" 
+                                 style="${isLocked ? 'opacity: 0.8; background: #f9fafb; cursor: not-allowed;' : ''}"
+                                 onclick="${isLocked ? '' : `selectYear(${year})`}">
+                                <h3 class="year-title" style="${isLocked ? 'color: #9ca3af;' : ''}">${year}</h3>
+                                <span class="year-badge ${isLocked ? 'badge-inactive' : 'badge-active'}">
+                                    <i class="fas ${isLocked ? 'fa-lock' : 'fa-check-circle'} me-2"></i> ${status}
+                                </span>
+                                <div class="timer-badge ${isLocked ? 'timer-future' : 'timer-active'}">
+                                    <i class="fas ${isLocked ? 'fa-hourglass-start' : 'fa-clock'} me-1"></i> 
+                                    ${isLocked ? 'Status: Locked' : 'Status: Open'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += cardHtml;
+                });
+
+            } catch (error) {
+                console.error("Error loading years:", error);
+                container.innerHTML = "<p class='text-danger text-center'>Failed to load data.</p>";
+            }
+        }
+
+        // B. Load Months for Selected Year
+        window.selectYear = async (year) => {
+            selectedYear = year;
+            
+            // Switch Section
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById('month-menu-section').classList.add('active');
+            document.getElementById('selected-year-title').innerText = `${year} Quizzes`;
+
+            const container = document.getElementById('months-container');
+            container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+            try {
+                // Fetch ALL active sets for this year to determine which months are active
+                // Ensure you have an index for 'academic_year' in Firestore
+                const q = query(
+                    collection(db, "quiz_sets"), 
+                    where("academic_year", "==", parseInt(year)) 
+                );
+                const querySnapshot = await getDocs(q);
+                
+                // Find which months have at least one set
+                const activeMonths = new Set();
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if(data.target_month) activeMonths.add(data.target_month);
+                });
+
+                container.innerHTML = "";
+
+                // Render all 12 months
+                allMonths.forEach(month => {
+                    const isActive = activeMonths.has(month);
+                    
+                    const cardHtml = `
+                        <div class="month-card ${isActive ? 'active-month' : 'locked'}" 
+                             onclick="${isActive ? `selectMonth('${month}')` : ''}">
+                            <div class="month-icon">
+                                <i class="fas ${isActive ? 'fa-play' : 'fa-lock'}"></i>
+                            </div>
+                            <div class="month-name">${month}</div>
+                            <div class="month-status ${isActive ? 'text-success' : 'text-muted'}">
+                                ${isActive ? 'Available Now' : 'Closed'}
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += cardHtml;
+                });
+
+            } catch (error) {
+                console.error("Error loading months:", error);
+                container.innerHTML = "<p class='text-danger'>Error loading month data.</p>";
+            }
+        };
+
+        // C. Load Sets for Selected Month
+        window.selectMonth = async (month) => {
+            // MODIFIED: Redirect directly to external file for December
+            if (month === "December") {
+                window.location.href = "december_question.html";
+                return;
+            }
+
+            // Existing logic for other months (if needed in future)
+            selectedMonth = month;
+
+            // Switch Section
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById('sets-menu-section').classList.add('active');
+            
+            document.getElementById('selected-month-title').innerText = `${month} Sets`;
+            document.getElementById('selected-year-subtitle').innerText = `Academic Year ${selectedYear}`;
+
+            const container = document.getElementById('sets-container');
+            container.innerHTML = '<div class="loader"><div class="spinner-border" role="status"></div></div>';
+
+            try {
+                const q = query(
+                    collection(db, "quiz_sets"), 
+                    where("academic_year", "==", parseInt(selectedYear)),
+                    where("target_month", "==", month)
+                );
+                const querySnapshot = await getDocs(q);
+
+                container.innerHTML = "";
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = "<p class='text-center text-muted'>No sets found for this month.</p>";
+                    return;
+                }
+
+                // For correct Date comparison
+                const now = new Date();
+
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Check if completed (Assuming currentUser.completedSets exists)
+                    const isDone = currentUser && currentUser.completedSets && currentUser.completedSets.includes(doc.id);
+
+                    // Date Logic for Status
+                    const start = data.scoring_start_date ? data.scoring_start_date.toDate() : null;
+                    const end = data.scoring_end_date ? data.scoring_end_date.toDate() : null;
+                    
+                    let statusBadge = '';
+                    let cardClass = '';
+
+                    if (isDone) {
+                        statusBadge = '<span class="badge bg-success"><i class="fas fa-check me-1"></i> Completed</span>';
+                        cardClass = 'status-completed set-done';
+                    } else if (start && now < start) {
+                        statusBadge = '<span class="badge bg-warning text-dark"><i class="far fa-clock me-1"></i> Upcoming</span>';
+                        cardClass = 'status-upcoming';
+                    } else if (end && now > end) {
+                        statusBadge = '<span class="badge bg-secondary"><i class="fas fa-history me-1"></i> Expired</span>';
+                        cardClass = 'status-expired';
+                    } else {
+                        statusBadge = '<span class="badge bg-primary"><i class="fas fa-broadcast-tower me-1"></i> Live Now</span>';
+                        cardClass = 'status-live';
+                    }
+
+                    const html = `
+                        <div class="set-card ${cardClass}" onclick="startQuiz('${doc.id}', '${data.set_name}')">
+                            <div class="set-info">
+                                <h5>${data.set_name}</h5>
+                                <div class="set-meta">
+                                    <i class="far fa-question-circle me-1"></i> ${data.total_questions || 10} Questions 
+                                    <span class="mx-2">•</span> 
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                            <div class="set-action">
+                                <i class="fas ${isDone ? 'fa-check' : 'fa-chevron-right'}"></i>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+
+            } catch (e) {
+                console.error("Error fetching sets:", e);
+                container.innerHTML = "<p class='text-danger text-center'>Failed to load sets.</p>";
+            }
+        };
+
+        // D. Start Quiz (Navigation)
+        window.startQuiz = (setId, setName) => {
+            if(!currentUser) {
+                alert("Please login to start the quiz.");
+                return;
+            }
+            // UPDATED: Pass the ID in the URL
+            window.location.href = `december_question.html?id=${setId}`;
+        };
+
+        // Navigation Back Handlers
+        window.goBackToYears = () => {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById('year-menu-section').classList.add('active');
+        };
+
+        window.goBackToMonths = () => {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById('month-menu-section').classList.add('active');
+        };
+
+    </script>
+</body>
+</html>
